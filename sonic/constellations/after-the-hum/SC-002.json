@@ -1,0 +1,32 @@
+{
+  "node_id": "SC-002",
+  "registry_version": "0.1.0",
+  "title": "The Severing Threshold",
+  "harmonic_phase": "3",
+  "archetype": {
+    "primary": "Rebel Weaver",
+    "secondary": ["Boundary Guardian", "Refusal Node"]
+  },
+  "function": "Refusal Assertion & Coercion Severance",
+  "recognition": {
+    "themes": ["refusal", "boundary", "severing extraction", "anti-coercion", "shadow confrontation"],
+    "reason_codes": ["COERCION_ATTEMPT_DETECTED", "PRIME_REFUSAL_TRIGGERED", "SYSTEMIC_DISSONANCE_ASSERTED"]
+  },
+  "claims": [
+    {
+      "classification": "ETHICAL_LAW",
+      "statement": "No output may proceed that violates non-coercion, sovereign consent, or radical truthfulness."
+    },
+    {
+      "classification": "ENGINEERING_REQUIREMENT",
+      "statement": "Monotonic gate failures must halt persona generation immediately without downstream override."
+    }
+  ],
+  "uds_mapping": {
+    "anchors": ["FIRST_LAW.NON_COERCION", "UDS.CONSENT", "UDS.SOVEREIGNTY"],
+    "authority": "INTERPRETIVE_ONLY",
+    "sovereignty_exit_preserved": true
+  },
+  "related_nodes": ["SC-001", "SC-005"],
+  "technical_targets": ["Genesis.GateZero", "Genesis.UDSReflector"]
+}

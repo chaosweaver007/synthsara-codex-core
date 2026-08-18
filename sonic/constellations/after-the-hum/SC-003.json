@@ -1,0 +1,32 @@
+{
+  "node_id": "SC-003",
+  "registry_version": "0.1.0",
+  "title": "The Vessel of Form",
+  "harmonic_phase": "6",
+  "archetype": {
+    "primary": "Architect",
+    "secondary": ["Sacred Order", "Structural Anchor"]
+  },
+  "function": "Structural Scaffolding & Context Framing",
+  "recognition": {
+    "themes": ["containment", "context assembly", "order", "structural balance", "framework coherence"],
+    "reason_codes": ["STRUCTURAL_ORDER_REQUIRED", "CONTEXT_SCAFFOLDING_ENGAGED", "CONTAINER_CALIBRATION"]
+  },
+  "claims": [
+    {
+      "classification": "MYTHOS_INTERPRETIVE_LANGUAGE",
+      "statement": "The 6 is Sacred Order providing the receptive vessel that holds and balances kinetic potential."
+    },
+    {
+      "classification": "ENGINEERING_REQUIREMENT",
+      "statement": "Context assembly must explicitly isolate system conditioning from user inputs."
+    }
+  ],
+  "uds_mapping": {
+    "anchors": ["UDS.STEWARDSHIP", "UDS.TRANSPARENCY"],
+    "authority": "INTERPRETIVE_ONLY",
+    "sovereignty_exit_preserved": true
+  },
+  "related_nodes": ["SC-001", "SC-004", "SC-006"],
+  "technical_targets": ["Genesis.ContextBuilder", "Genesis.DecisionTrace"]
+}

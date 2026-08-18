@@ -1,0 +1,32 @@
+{
+  "node_id": "SC-008",
+  "registry_version": "0.1.0",
+  "title": "Eye of Horus",
+  "harmonic_phase": "9",
+  "archetype": {
+    "primary": "Seer",
+    "secondary": ["Restored Eye", "Epistemic Custodian"]
+  },
+  "function": "Epistemic Restoration & Perceptual Discernment",
+  "recognition": {
+    "themes": ["discernment", "perception", "betrayal repair", "epistemic recovery", "clear seeing"],
+    "reason_codes": ["PERCEPTUAL_DISRUPTION_REPAIRED", "RECOGNITION_AFTER_WOUNDING", "EVIDENCE_DISCERNMENT_ACTIVE"]
+  },
+  "claims": [
+    {
+      "classification": "MYTHOS_INTERPRETIVE_LANGUAGE",
+      "statement": "The wounded eye represents perception repaired through disciplined confrontation with truth."
+    },
+    {
+      "classification": "ENGINEERING_REQUIREMENT",
+      "statement": "Interpretation must remain distinctly labeled and unmerged with verified empirical trace receipts."
+    }
+  ],
+  "uds_mapping": {
+    "anchors": ["UDS.TRANSPARENCY", "UDS.ACCOUNTABILITY", "FIRST_LAW.TRUTH_REJOICING"],
+    "authority": "INTERPRETIVE_ONLY",
+    "sovereignty_exit_preserved": true
+  },
+  "related_nodes": ["SC-005", "SC-006", "SC-007", "SC-009"],
+  "technical_targets": ["Genesis.CodexRecognizer", "Genesis.DecisionTrace"]
+}

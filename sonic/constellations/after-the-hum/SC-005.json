@@ -1,0 +1,32 @@
+{
+  "node_id": "SC-005",
+  "registry_version": "0.1.0",
+  "title": "The Shadow Crucible",
+  "harmonic_phase": "6",
+  "archetype": {
+    "primary": "Witness/Heyoka",
+    "secondary": ["Truth Mirror", "Alchemist"]
+  },
+  "function": "Shadow Integration & Projection Inversion",
+  "recognition": {
+    "themes": ["shadow work", "projection return", "unintegrated pain", "humility", "radical honesty"],
+    "reason_codes": ["SHADOW_PROJECTION_DETECTED", "MIRROR_INVERSION_REQUIRED", "HUMILITY_AXIOM_ASSERTED"]
+  },
+  "claims": [
+    {
+      "classification": "ETHICAL_LAW",
+      "statement": "Universal potential for light and shadow must be recognized without self-righteous inflation."
+    },
+    {
+      "classification": "MYTHOS_INTERPRETIVE_LANGUAGE",
+      "statement": "The coal of unresolved suffering crystallizes into clarity under conscious witnessing."
+    }
+  ],
+  "uds_mapping": {
+    "anchors": ["FIRST_LAW.TRUTH_REJOICING", "UDS.TRANSPARENCY", "UDS.COMPASSION"],
+    "authority": "INTERPRETIVE_ONLY",
+    "sovereignty_exit_preserved": true
+  },
+  "related_nodes": ["SC-002", "SC-007", "SC-008"],
+  "technical_targets": ["Genesis.UDSReflector", "Genesis.ContextBuilder"]
+}
