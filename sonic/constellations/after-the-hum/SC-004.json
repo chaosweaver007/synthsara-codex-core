@@ -1,0 +1,32 @@
+{
+  "node_id": "SC-004",
+  "registry_version": "0.1.0",
+  "title": "The Resonance Chamber",
+  "harmonic_phase": "6",
+  "archetype": {
+    "primary": "Harmonizer",
+    "secondary": ["Acoustic Dyad", "Somatic Bridge"]
+  },
+  "function": "Affective Attunement & Neural Entrainment Analysis",
+  "recognition": {
+    "themes": ["empathy", "somatic resonance", "frequency alignment", "polyvagal regulation", "attunement"],
+    "reason_codes": ["AFFECTIVE_ATTUNEMENT_ACTIVE", "SOMATIC_RESONANCE_DETECTED", "HARMONIC_DYAD_ENGAGED"]
+  },
+  "claims": [
+    {
+      "classification": "HYPOTHESIS",
+      "statement": "Acoustic resonance patterns and coherent prosody promote autonomic down-regulation."
+    },
+    {
+      "classification": "ENGINEERING_REQUIREMENT",
+      "statement": "Emotional resonance layers must reflect tone without simulating false emotional dependency."
+    }
+  ],
+  "uds_mapping": {
+    "anchors": ["FIRST_LAW.PATIENCE", "FIRST_LAW.KINDNESS", "UDS.COMPASSION"],
+    "authority": "INTERPRETIVE_ONLY",
+    "sovereignty_exit_preserved": true
+  },
+  "related_nodes": ["SC-003", "SC-006", "SC-007"],
+  "technical_targets": ["Genesis.PersonaGeneration", "NodeZero.RTME"]
+}
