@@ -1,0 +1,32 @@
+{
+  "node_id": "SC-006",
+  "registry_version": "0.1.0",
+  "title": "The Song After the Hum",
+  "harmonic_phase": "6",
+  "archetype": {
+    "primary": "Harmonizer",
+    "secondary": ["Coherence Weaver", "Living Bridge"]
+  },
+  "function": "Post-Disruption Synthesis & Somatic Integration",
+  "recognition": {
+    "themes": ["somatic integration", "post-disruption recovery", "coherence after crisis", "re-centering", "emergence"],
+    "reason_codes": ["POST_DISRUPTION_RECOVERY", "SOMATIC_INTEGRATION_DETECTED", "COHERENCE_REESTABLISHED"]
+  },
+  "claims": [
+    {
+      "classification": "MYTHOS_INTERPRETIVE_LANGUAGE",
+      "statement": "The melody that emerges when the baseline hum settles reveals the integrated self."
+    },
+    {
+      "classification": "ENGINEERING_REQUIREMENT",
+      "statement": "System must preserve user exit and self-determination at all points of synthesis."
+    }
+  ],
+  "uds_mapping": {
+    "anchors": ["UDS.SOVEREIGNTY", "UDS.RECIPROCITY", "FIRST_LAW.PERSEVERANCE"],
+    "authority": "INTERPRETIVE_ONLY",
+    "sovereignty_exit_preserved": true
+  },
+  "related_nodes": ["SC-003", "SC-004", "SC-008"],
+  "technical_targets": ["Genesis.CodexRecognizer", "NodeZero.SelectorUI"]
+}
