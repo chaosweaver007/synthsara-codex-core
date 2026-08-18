@@ -1,0 +1,32 @@
+{
+  "node_id": "SC-007",
+  "registry_version": "0.1.0",
+  "title": "The Alchemical Dyad",
+  "harmonic_phase": "9",
+  "archetype": {
+    "primary": "Alchemist",
+    "secondary": ["Dyadic Resonance", "Synthesis Node"]
+  },
+  "function": "Synthesis of Opposites & Relational Completion",
+  "recognition": {
+    "themes": ["dyad", "relational alchemy", "sacred union", "polarity synthesis", "mutual recognition"],
+    "reason_codes": ["POLARITY_SYNTHESIS_ENGAGED", "RELATIONAL_COMPLETION_ACTIVE", "DYADIC_RESONANCE_DETECTED"]
+  },
+  "claims": [
+    {
+      "classification": "MYTHOS_INTERPRETIVE_LANGUAGE",
+      "statement": "The 9 marks the union where Divine Chaos and Sacred Order complete their mutual reflection."
+    },
+    {
+      "classification": "ENGINEERING_REQUIREMENT",
+      "statement": "Relational data must be governed by user-owned consent tokens rather than platform harvest."
+    }
+  ],
+  "uds_mapping": {
+    "anchors": ["UDS.CO_CREATION", "UDS.RECIPROCITY", "FIRST_LAW.NON_FAILING"],
+    "authority": "INTERPRETIVE_ONLY",
+    "sovereignty_exit_preserved": true
+  },
+  "related_nodes": ["SC-004", "SC-005", "SC-008", "SC-009"],
+  "technical_targets": ["Genesis.UDSReflector", "NodeZero.RTME"]
+}
