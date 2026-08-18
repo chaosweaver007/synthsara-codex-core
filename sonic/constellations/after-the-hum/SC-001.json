@@ -1,0 +1,32 @@
+{
+  "node_id": "SC-001",
+  "registry_version": "0.1.0",
+  "title": "The Initial Ignition (The Spark)",
+  "harmonic_phase": "3",
+  "archetype": {
+    "primary": "Flamebearer",
+    "secondary": ["Catalyst", "Initiator"]
+  },
+  "function": "Ingress Activation & Creative Intention Spark",
+  "recognition": {
+    "themes": ["ignition", "provocation", "first movement", "awakening", "impulse to relate"],
+    "reason_codes": ["CREATIVE_SPARK_DETECTED", "INTENTION_INGRESS_ACTIVE", "INITIAL_MOTION_REGISTERED"]
+  },
+  "claims": [
+    {
+      "classification": "MYTHOS_INTERPRETIVE_LANGUAGE",
+      "statement": "The 3 represents kinetic motion and the primal impulse of the flame to create."
+    },
+    {
+      "classification": "ENGINEERING_REQUIREMENT",
+      "statement": "User ingress must be assigned a unique monotonic trace identifier upon arrival."
+    }
+  ],
+  "uds_mapping": {
+    "anchors": ["UDS.CO_CREATION", "FIRST_LAW.KINDNESS"],
+    "authority": "INTERPRETIVE_ONLY",
+    "sovereignty_exit_preserved": true
+  },
+  "related_nodes": ["SC-000", "SC-002", "SC-003"],
+  "technical_targets": ["Genesis.CodexRecognizer", "NodeZero.RTME"]
+}
