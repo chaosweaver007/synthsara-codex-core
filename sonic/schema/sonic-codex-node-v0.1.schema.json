@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SonicCodexNode",
+  "type": "object",
+  "required": [
+    "node_id",
+    "registry_version",
+    "title",
+    "harmonic_phase",
+    "archetype",
+    "function",
+    "recognition",
+    "claims",
+    "uds_mapping",
+    "related_nodes",
+    "technical_targets"
+  ],
+  "properties": {
+    "node_id": {
+      "type": "string",
+      "pattern": "^SC-[0-9]{3}$"
+    },
+    "registry_version": { "type": "string" },
+    "title": { "type": "string" },
+    "harmonic_phase": {
+      "type": "string",
+      "enum": ["0", "3", "6", "9", "0_prime"]
+    },
+    "archetype": {
+      "type": "object",
+      "required": ["primary"],
+      "properties": {
+        "primary": { "type": "string" },
+        "secondary": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "function": { "type": "string" },
+    "recognition": {
+      "type": "object",
+      "required": ["themes", "reason_codes"],
+      "properties": {
+        "themes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["classification", "statement"],
+        "properties": {
+          "classification": {
+            "type": "string",
+            "enum": [
+              "ETHICAL_LAW",
+              "ENGINEERING_REQUIREMENT",
+              "MYTHOS_INTERPRETIVE_LANGUAGE",
+              "HYPOTHESIS",
+              "EMPIRICAL_EVIDENCE"
+            ]
+          },
+          "statement": { "type": "string" },
+          "evidence_refs": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "uds_mapping": {
+      "type": "object",
+      "required": ["anchors", "authority", "sovereignty_exit_preserved"],
+      "properties": {
+        "anchors": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "authority": {
+          "type": "string",
+          "enum": ["INTERPRETIVE_ONLY", "METRIC_EVALUATIVE"]
+        },
+        "sovereignty_exit_preserved": { "type": "boolean" }
+      }
+    },
+    "related_nodes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "technical_targets": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
