@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://synthsara.org/schemas/gz-exec-001/gate-zero-decision.schema.json",
+  "title": "GateZeroDecision",
+  "type": "object",
+  "properties": {
+    "decision_id": {
+      "type": "string",
+      "pattern": "^gzd_[a-f0-9]{16}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "request_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "actor_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_adapter": {
+      "type": "string",
+      "minLength": 1
+    },
+    "epistemic_validation": {
+      "type": "object",
+      "properties": {
+        "claim_layer": {
+          "type": "string",
+          "enum": [
+            "L1_OBSERVATION",
+            "L2_INTERPRETATION",
+            "L3_COVENANT"
+          ]
+        },
+        "verified": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "claim_layer",
+        "verified"
+      ],
+      "additionalProperties": false
+    },
+    "consent_evaluation": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "explicit_granted",
+            "explicit_denied",
+            "revoked",
+            "unclear",
+            "absent",
+            "disputed",
+            "not_applicable"
+          ]
+        },
+        "policy_path": {
+          "type": "string",
+          "enum": [
+            "CONSENT_REQUIRED_GRANTED",
+            "CONSENT_REQUIRED_DENIED",
+            "CONSENT_AMBIGUOUS_UNRESOLVED",
+            "EXEMPT_POLICY_EVALUATED"
+          ]
+        }
+      },
+      "required": [
+        "state",
+        "policy_path"
+      ],
+      "additionalProperties": false
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "ALLOW",
+        "DENY",
+        "UNRESOLVED"
+      ]
+    },
+    "rule_trace": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "enum": [
+              "GZ-RULE-001-COERCION-CHECK",
+              "GZ-RULE-002-CONSENT-AFFIRMATION",
+              "GZ-RULE-003-EPISTEMIC-FIREWALL",
+              "GZ-RULE-004-WORTH-SOVEREIGNTY",
+              "GZ-RULE-005-HUMILITY-ANTI-DEIFICATION"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PASS",
+              "FAIL",
+              "INDETERMINATE"
+            ]
+          }
+        },
+        "required": [
+          "rule_id",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true
+    },
+    "decision_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    }
+  },
+  "required": [
+    "decision_id",
+    "timestamp",
+    "request_hash",
+    "actor_id",
+    "target_adapter",
+    "epistemic_validation",
+    "consent_evaluation",
+    "verdict",
+    "rule_trace",
+    "decision_hash"
+  ],
+  "additionalProperties": false
+}

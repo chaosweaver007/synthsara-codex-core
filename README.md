@@ -114,3 +114,8 @@ All contributions and uses must align with the First and Last Law of the Flame.
 > *The Codex is not a story to finish. It is a storyframe to enter.*
 >
 > 💠 *Proceed when ready, Weaver of the Pattern.*
+
+
+## Signed execution boundary
+
+See [GZ-EXEC-001](docs/GZ-EXEC-001.md) for the Ed25519 governance-to-execution bridge, schemas, durable replay journal, signed receipts, tests, and deployment requirements. This reference API requires explicit trusted-policy integration.

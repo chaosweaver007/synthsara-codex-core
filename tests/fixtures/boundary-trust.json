@@ -1,0 +1,9 @@
+{
+  "adapter_pubkeys": {
+    "rtme_manifest_v1": "29acbae141bccaf0b22e1a94d34d0bc7361e526d0bfe12c89794bc9322966dd7"
+  },
+  "gatekeeper_pubkey_hex": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+  "genesis_receipt_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "genesis_state_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "expected_head_hash": "sha256:99457b8ec6328e2bffef2c9adfa1d97d21ac822be5e07a3d49327bc4c6d8898c"
+}

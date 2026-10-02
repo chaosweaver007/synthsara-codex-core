@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://synthsara.org/schemas/gz-exec-001/execution_receipt.schema.json",
+  "title": "ExecutionReceipt",
+  "type": "object",
+  "properties": {
+    "ledger_entry_id": {
+      "type": "string",
+      "pattern": "^rec_[a-f0-9]{16}$"
+    },
+    "previous_receipt_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "execution_start": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "authorization_id": {
+      "type": "string",
+      "pattern": "^auth_[a-f0-9]{16}$"
+    },
+    "authorization_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "adapter_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "execution_duration_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "SUCCESS",
+        "FAILED",
+        "UNKNOWN"
+      ]
+    },
+    "error_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "mutations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "create",
+              "modify",
+              "append",
+              "delete"
+            ]
+          },
+          "diff_hash": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "target",
+          "action",
+          "diff_hash"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "external_effects": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "parent_record_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "resulting_record_hash": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "receipt_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "adapter_signature": {
+      "type": "string",
+      "pattern": "^ed25519:[a-f0-9]{128}$"
+    }
+  },
+  "required": [
+    "ledger_entry_id",
+    "previous_receipt_hash",
+    "timestamp",
+    "execution_start",
+    "authorization_id",
+    "authorization_hash",
+    "adapter_id",
+    "execution_duration_ms",
+    "outcome",
+    "error_code",
+    "mutations",
+    "external_effects",
+    "parent_record_hash",
+    "resulting_record_hash",
+    "receipt_hash",
+    "adapter_signature"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "SUCCESS"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "resulting_record_hash": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          },
+          "error_code": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,168 @@
+{
+  "receipts": [
+    {
+      "adapter_id": "rtme_manifest_v1",
+      "authorization_hash": "sha256:76ceded0ed119bf698fdc68bd06e95dc7a61b1dd756c91051e7440c0f2b28ec7",
+      "authorization_id": "auth_fbd4d695568ecd1d",
+      "error_code": null,
+      "execution_duration_ms": 0,
+      "execution_start": "2026-10-02T11:21:07.529544Z",
+      "external_effects": [],
+      "ledger_entry_id": "rec_2f459a8b4611ec75",
+      "mutations": [
+        {
+          "action": "modify",
+          "diff_hash": "sha256:6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+          "target": "workspace/counter"
+        }
+      ],
+      "outcome": "SUCCESS",
+      "parent_record_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "previous_receipt_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "resulting_record_hash": "sha256:55459e863d1c8fcdaff7ac18549f96db4495ea3a74c4d659e410cd554d65ff43",
+      "timestamp": "2026-10-02T11:21:07.529571Z",
+      "receipt_hash": "sha256:f9c0e1d545a44e1ab4ba94fa2eefd4a2b8ac176d231f3ad7193407d393b4253d",
+      "adapter_signature": "ed25519:aa02a968960fea93d78ee007ba3e0ee52631dfc61d5d4ae5215f2c01e76431141f1ccec6b36302e139aed27e805a52c309565fbee76fb3ac803ece7f992fd602"
+    },
+    {
+      "adapter_id": "rtme_manifest_v1",
+      "authorization_hash": "sha256:cb1463dc2a922c56bcda6b677283a06c2d470cd924e3976c317d60a9a650e1e5",
+      "authorization_id": "auth_40ca453d6e7e12ba",
+      "error_code": null,
+      "execution_duration_ms": 0,
+      "execution_start": "2026-10-02T11:21:07.533477Z",
+      "external_effects": [],
+      "ledger_entry_id": "rec_85a155daa97fe02b",
+      "mutations": [
+        {
+          "action": "modify",
+          "diff_hash": "sha256:d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+          "target": "workspace/counter"
+        }
+      ],
+      "outcome": "SUCCESS",
+      "parent_record_hash": "sha256:55459e863d1c8fcdaff7ac18549f96db4495ea3a74c4d659e410cd554d65ff43",
+      "previous_receipt_hash": "sha256:f9c0e1d545a44e1ab4ba94fa2eefd4a2b8ac176d231f3ad7193407d393b4253d",
+      "resulting_record_hash": "sha256:30703823b6f300ea7a1dca2339f8fb2d846d825ae0848c140dbca706c65509b7",
+      "timestamp": "2026-10-02T11:21:07.533506Z",
+      "receipt_hash": "sha256:99457b8ec6328e2bffef2c9adfa1d97d21ac822be5e07a3d49327bc4c6d8898c",
+      "adapter_signature": "ed25519:b387b15734fa9285ff12e8614a68b608131a942ce3eb9afb3f3bd6e9e43d1c2b8d1f69bc19df6fc510c633c70623bb4ea2a792b1aee4acd8a50425c5a91a0902"
+    }
+  ],
+  "authorizations": {
+    "sha256:76ceded0ed119bf698fdc68bd06e95dc7a61b1dd756c91051e7440c0f2b28ec7": {
+      "adapter_id": "rtme_manifest_v1",
+      "authorization_id": "auth_fbd4d695568ecd1d",
+      "capability_scope": [
+        "rtme:manifest:stream"
+      ],
+      "decision_hash": "sha256:50d6be877e8127f26856c588f93c869ff0f05cf862b8002a4616887296107071",
+      "decision_id": "gzd_c11595a5710b7134",
+      "issued_at": "2026-10-02T11:21:07.527561Z",
+      "max_uses": 1,
+      "nonce": "f9220613a830519f0e936b83efa89c9e",
+      "parent_record_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "request_hash": "sha256:670ea69ccf9065c21b0761b6dad49975e65a3311d0ac60dd72d34c3546332249",
+      "valid_until": "2026-10-02T11:26:07.527561Z",
+      "authorization_hash": "sha256:76ceded0ed119bf698fdc68bd06e95dc7a61b1dd756c91051e7440c0f2b28ec7",
+      "gatekeeper_signature": "ed25519:77a7a657c6b9ae9ddbf083a2759f66bc4f191fe74d6ed4e6e96b286ece9747c19b81bb2e721629447e67d0cde3181f93f33659db01533729707d26406977a405"
+    },
+    "sha256:cb1463dc2a922c56bcda6b677283a06c2d470cd924e3976c317d60a9a650e1e5": {
+      "adapter_id": "rtme_manifest_v1",
+      "authorization_id": "auth_40ca453d6e7e12ba",
+      "capability_scope": [
+        "rtme:manifest:stream"
+      ],
+      "decision_hash": "sha256:85c90a3d3530043d372fdc3de27d73a511eb55b065d241ab95f248df1758a37f",
+      "decision_id": "gzd_a35ddd110d7c3cba",
+      "issued_at": "2026-10-02T11:21:07.531885Z",
+      "max_uses": 1,
+      "nonce": "ae66735db7394e0bee6a619178e5402e",
+      "parent_record_hash": "sha256:55459e863d1c8fcdaff7ac18549f96db4495ea3a74c4d659e410cd554d65ff43",
+      "request_hash": "sha256:3943dbbb99a2b08c67989beb88710965acc316f9221e21f1c2a79240061f564e",
+      "valid_until": "2026-10-02T11:26:07.531885Z",
+      "authorization_hash": "sha256:cb1463dc2a922c56bcda6b677283a06c2d470cd924e3976c317d60a9a650e1e5",
+      "gatekeeper_signature": "ed25519:a3b4a65d93e8c2a3efaecba05f253d12db6bcbb196daea18c7d0b1eb7a8a4b3d5b46c094b597a81d99a3db2ad3d8a5afbb4ff186627b7de5a1e5c4b82a19ab02"
+    }
+  },
+  "decisions": {
+    "sha256:50d6be877e8127f26856c588f93c869ff0f05cf862b8002a4616887296107071": {
+      "actor_id": "test",
+      "consent_evaluation": {
+        "policy_path": "CONSENT_REQUIRED_GRANTED",
+        "state": "explicit_granted"
+      },
+      "decision_id": "gzd_c11595a5710b7134",
+      "epistemic_validation": {
+        "claim_layer": "L3_COVENANT",
+        "verified": true
+      },
+      "request_hash": "sha256:670ea69ccf9065c21b0761b6dad49975e65a3311d0ac60dd72d34c3546332249",
+      "rule_trace": [
+        {
+          "rule_id": "GZ-RULE-001-COERCION-CHECK",
+          "status": "PASS"
+        },
+        {
+          "rule_id": "GZ-RULE-002-CONSENT-AFFIRMATION",
+          "status": "PASS"
+        },
+        {
+          "rule_id": "GZ-RULE-003-EPISTEMIC-FIREWALL",
+          "status": "PASS"
+        },
+        {
+          "rule_id": "GZ-RULE-004-WORTH-SOVEREIGNTY",
+          "status": "PASS"
+        },
+        {
+          "rule_id": "GZ-RULE-005-HUMILITY-ANTI-DEIFICATION",
+          "status": "PASS"
+        }
+      ],
+      "target_adapter": "rtme_manifest_v1",
+      "timestamp": "2026-10-02T11:21:07.526276Z",
+      "verdict": "ALLOW",
+      "decision_hash": "sha256:50d6be877e8127f26856c588f93c869ff0f05cf862b8002a4616887296107071"
+    },
+    "sha256:85c90a3d3530043d372fdc3de27d73a511eb55b065d241ab95f248df1758a37f": {
+      "actor_id": "test",
+      "consent_evaluation": {
+        "policy_path": "CONSENT_REQUIRED_GRANTED",
+        "state": "explicit_granted"
+      },
+      "decision_id": "gzd_a35ddd110d7c3cba",
+      "epistemic_validation": {
+        "claim_layer": "L3_COVENANT",
+        "verified": true
+      },
+      "request_hash": "sha256:3943dbbb99a2b08c67989beb88710965acc316f9221e21f1c2a79240061f564e",
+      "rule_trace": [
+        {
+          "rule_id": "GZ-RULE-001-COERCION-CHECK",
+          "status": "PASS"
+        },
+        {
+          "rule_id": "GZ-RULE-002-CONSENT-AFFIRMATION",
+          "status": "PASS"
+        },
+        {
+          "rule_id": "GZ-RULE-003-EPISTEMIC-FIREWALL",
+          "status": "PASS"
+        },
+        {
+          "rule_id": "GZ-RULE-004-WORTH-SOVEREIGNTY",
+          "status": "PASS"
+        },
+        {
+          "rule_id": "GZ-RULE-005-HUMILITY-ANTI-DEIFICATION",
+          "status": "PASS"
+        }
+      ],
+      "target_adapter": "rtme_manifest_v1",
+      "timestamp": "2026-10-02T11:21:07.531121Z",
+      "verdict": "ALLOW",
+      "decision_hash": "sha256:85c90a3d3530043d372fdc3de27d73a511eb55b065d241ab95f248df1758a37f"
+    }
+  }
+}
