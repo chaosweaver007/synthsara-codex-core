@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://synthsara.org/schemas/gz-exec-001/capability-authorization.schema.json",
+  "title": "CapabilityAuthorization",
+  "type": "object",
+  "properties": {
+    "authorization_id": {
+      "type": "string",
+      "pattern": "^auth_[a-f0-9]{16}$"
+    },
+    "decision_id": {
+      "type": "string",
+      "pattern": "^gzd_[a-f0-9]{16}$"
+    },
+    "decision_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "request_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "parent_record_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "adapter_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capability_scope": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "nonce": {
+      "type": "string",
+      "pattern": "^(?:[a-f0-9]{32}|[a-f0-9]{64})$"
+    },
+    "max_uses": {
+      "type": "integer",
+      "const": 1
+    },
+    "authorization_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "gatekeeper_signature": {
+      "type": "string",
+      "pattern": "^ed25519:[a-f0-9]{128}$"
+    }
+  },
+  "required": [
+    "authorization_id",
+    "decision_id",
+    "decision_hash",
+    "request_hash",
+    "parent_record_hash",
+    "adapter_id",
+    "capability_scope",
+    "issued_at",
+    "valid_until",
+    "nonce",
+    "max_uses",
+    "authorization_hash",
+    "gatekeeper_signature"
+  ],
+  "additionalProperties": false
+}
