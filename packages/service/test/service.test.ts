@@ -72,3 +72,54 @@ describe('service v0.1 HTTP ingress',()=>{
   expect(two.status).toBe(429);
  },1));
 });
+
+describe('service v0.1 adversarial durability',()=>{
+ it('replays a committed receipt after server and SQLite restart',async()=>{
+  const dir=mkdtempSync(join(tmpdir(),'uds-restart-'));
+  const dbPath=join(dir,'ledger.sqlite');
+  const f=await fixture();
+  const contribution=await f.contribution('restart_c1','restart_a1');
+  const body=JSON.stringify({contribution});
+  const requestHeaders={...headers,'idempotency-key':'restart_key_001'};
+  const openLedger=()=>new SqliteGovernanceLedger({dbPath,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
+  let ledger=openLedger();
+  let server=new AdmissionServer({ledger,consent:allow,authTokens:new Set([token])});
+  try{
+   await ledger.registerGrant(f.signed);
+   await server.listen(0);
+   let address=server.address();
+   if(!address||typeof address==='string')throw new Error('Missing server address');
+   const first=await fetch('http://127.0.0.1:'+address.port+'/v1/admit',{method:'POST',headers:requestHeaders,body});
+   expect(first.status).toBe(201);
+   const receipt=await first.json();
+   await server.close();
+   ledger.close();
+   ledger=openLedger();
+   server=new AdmissionServer({ledger,consent:allow,authTokens:new Set([token])});
+   await server.listen(0);
+   address=server.address();
+   if(!address||typeof address==='string')throw new Error('Missing restarted address');
+   const replay=await fetch('http://127.0.0.1:'+address.port+'/v1/admit',{method:'POST',headers:requestHeaders,body});
+   expect(replay.status).toBe(200);
+   expect(replay.headers.get('x-idempotent-replay')).toBe('true');
+   expect(await replay.json()).toEqual(receipt);
+   expect(ledger.isActionRecorded('restart_a1')).toBe(true);
+  }finally{
+   await server.close().catch(()=>{});
+   ledger.close();
+   rmSync(dir,{recursive:true,force:true});
+  }
+ });
+ it('serializes simultaneous same-key HTTP requests to one admission',async()=>setup(async({base,ledger,f})=>{
+  await ledger.registerGrant(f.signed);
+  const contribution=await f.contribution('parallel_c1','parallel_a1');
+  const body=JSON.stringify({contribution});
+  const send=()=>fetch(base+'/v1/admit',{method:'POST',headers:{...headers,'idempotency-key':'parallel_key_001'},body});
+  const responses=await Promise.all([send(),send()]);
+  expect(responses.map(r=>r.status).sort()).toEqual([200,201]);
+  const receipts=await Promise.all(responses.map(r=>r.json()));
+  expect(receipts[0]).toEqual(receipts[1]);
+  expect(responses.map(r=>r.headers.get('x-idempotent-replay')).sort()).toEqual(['false','true']);
+  expect(ledger.isActionRecorded('parallel_a1')).toBe(true);
+ }));
+});
