@@ -24,6 +24,22 @@ export function canonicalizeConsentRevocation(entry:Omit<ConsentRevocationEntry,
 }
 const consentFail=(reason:string):never=>{throw new Error('[UDS_CONSENT_ERROR]: '+reason);};
 export interface SqliteGovernanceConfig {readonly dbPath:string;readonly rootAnchorPublicKey:string;readonly activeEpoch:number;readonly maxDriftMs?:number;}
+export interface IdempotencyScope {
+ readonly principalHash:string;
+ readonly endpoint:string;
+ readonly idempotencyKey:string;
+ readonly requestDigest:string;
+}
+export interface AdmissionReceipt {
+ readonly contributionId:string;
+ readonly score:number;
+ readonly admitted:true;
+}
+export interface IdempotentAdmissionResult {
+ readonly receipt:AdmissionReceipt;
+ readonly isReplay:boolean;
+}
+const idemFail=(reason:string):never=>{throw new Error('[UDS_IDEMPOTENCY_CONFLICT]: '+reason);};
 export class SqliteGovernanceLedger {
  private readonly db:DatabaseSync;
  private readonly root:string;
@@ -144,6 +160,33 @@ export class SqliteGovernanceLedger {
    .get(recipientPublicKey.toLowerCase(),actionId)!==undefined;
  }
  async accept(c:WorthContribution,consent:ConsentAuthority,evaluationTime=Date.now()):Promise<void>{
+  await this.acceptInternal(c,consent,evaluationTime);
+ }
+ /** Atomic admission and receipt storage; caller authentication and digest derivation occur at the service boundary. */
+ async acceptWithIdempotency(c:WorthContribution,consent:ConsentAuthority,evaluationTime:number,scope:IdempotencyScope,score:number):Promise<IdempotentAdmissionResult>{
+  if(!scope||!/^[0-9a-f]{64}$/.test(scope.principalHash)||!/^[0-9a-f]{64}$/.test(scope.requestDigest)||
+   !/^[a-z0-9/_-]{1,80}$/.test(scope.endpoint)||!/^[A-Za-z0-9_-]{8,128}$/.test(scope.idempotencyKey)||
+   !Number.isFinite(score)||score<0)idemFail('Invalid idempotency scope or score');
+  const result=await this.acceptInternal(c,consent,evaluationTime,scope,score);
+  if(!result)throw new Error('[UDS_IDEMPOTENCY_ERROR]: Missing committed receipt');
+  return result;
+ }
+ private cached(scope:IdempotencyScope):AdmissionReceipt|undefined{
+  const row=this.db.prepare('SELECT request_digest,receipt_payload FROM admission_idempotency WHERE principal_hash=? AND endpoint=? AND idempotency_key=?')
+   .get(scope.principalHash,scope.endpoint,scope.idempotencyKey) as {request_digest:string;receipt_payload:string}|undefined;
+  if(!row)return undefined;
+  if(row.request_digest!==scope.requestDigest)idemFail('Key reused with different request');
+  const receipt=JSON.parse(row.receipt_payload) as AdmissionReceipt;
+  if(!receipt||receipt.admitted!==true||typeof receipt.contributionId!=='string'||!Number.isFinite(receipt.score))
+   idemFail('Invalid persisted receipt');
+  return Object.freeze(receipt);
+ }
+ private async acceptInternal(c:WorthContribution,consent:ConsentAuthority,evaluationTime:number,scope?:IdempotencyScope,score?:number):Promise<IdempotentAdmissionResult|undefined>{
+  // Historical replay is resolved before time-dependent new-admission checks.
+  if(scope){
+   const previous=this.cached(scope);
+   if(previous)return {receipt:previous,isReplay:true};
+  }
   validateWorthSchema(c);
   if(!Number.isSafeInteger(evaluationTime)||evaluationTime<=0||!c.verifiedActions.length||!c.communityAttestations.length)
    fail('Invalid evaluation time or missing evidence');
@@ -155,6 +198,11 @@ export class SqliteGovernanceLedger {
   // No awaits from this point through COMMIT. All authority mutations use the same database lock.
   this.db.exec('BEGIN IMMEDIATE');
   try{
+   // Re-check under BEGIN IMMEDIATE to close the concurrent retry window.
+   if(scope){
+    const previous=this.cached(scope);
+    if(previous){this.db.exec('COMMIT');return {receipt:previous,isReplay:true};}
+   }
    const now=Date.now();
    const grant=this.db.prepare('SELECT authorized_domains,valid_from,valid_until,authority_epoch FROM capability_grants WHERE attester_public_key=?');
    const revoked=this.db.prepare('SELECT 1 FROM revocations WHERE target_public_key=?');
@@ -182,8 +230,15 @@ export class SqliteGovernanceLedger {
     signature.run(a.recipientSignature.toLowerCase(),'RECIPIENT',c.contributionId);
    }
    for(const a of c.communityAttestations)signature.run(a.signature.toLowerCase(),'ATTESTER',c.contributionId);
+   let receipt:AdmissionReceipt|undefined;
+   if(scope){
+    receipt=Object.freeze({contributionId:c.contributionId,score:score!,admitted:true as const});
+    this.db.prepare('INSERT INTO admission_idempotency(principal_hash,endpoint,idempotency_key,request_digest,contribution_id,receipt_payload,committed_at) VALUES(?,?,?,?,?,?,?)')
+     .run(scope.principalHash,scope.endpoint,scope.idempotencyKey,scope.requestDigest,c.contributionId,JSON.stringify(receipt),now);
+   }
    this.db.exec('COMMIT');
-  }catch(e){this.db.exec('ROLLBACK');throw e;}
+   return receipt?{receipt,isReplay:false}:undefined;
+  }catch(e){if(this.db.isTransaction)this.db.exec('ROLLBACK');throw e;}
  }
  isKeyRevoked(key:string):boolean{return this.db.prepare('SELECT 1 FROM revocations WHERE target_public_key=?').get(key.toLowerCase())!==undefined;}
  isActionRecorded(id:string):boolean{return this.db.prepare('SELECT 1 FROM processed_actions WHERE action_id=?').get(id)!==undefined;}
