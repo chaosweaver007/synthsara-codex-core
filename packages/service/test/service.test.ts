@@ -63,7 +63,6 @@ describe('service v0.1 HTTP ingress',()=>{
   expect(response.status).toBe(200);
   expect(ledger.isConsentRevoked(f.recPub,'withdrawn_1')).toBe(true);
   const verify=await fetch(base+'/v1/verify/withdrawn_1',{headers});
-  expect(verify.status).toBe(200);
   expect(verify.status).toBe(404); // unowned action existence must not be disclosed
  }));
  it('scopes verification to the submitting principal and invalidates admitted actions on recipient withdrawal',async()=>setup(async({base,ledger,f})=>{
