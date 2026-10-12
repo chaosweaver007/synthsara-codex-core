@@ -1,0 +1,11 @@
+{
+  "name": "synthsara-codex-core",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @synthsara/core",
+    "test": "npm run test -w @synthsara/core"
+  }
+}
