@@ -171,6 +171,13 @@ export class SqliteGovernanceLedger {
   if(!result)throw new Error('[UDS_IDEMPOTENCY_ERROR]: Missing committed receipt');
   return result;
  }
+ /** Read-only preflight after transport authentication; never creates admission state. */
+ lookupIdempotency(scope:IdempotencyScope):AdmissionReceipt|undefined{
+  if(!scope||!/^[0-9a-f]{64}$/.test(scope.principalHash)||!/^[0-9a-f]{64}$/.test(scope.requestDigest)||
+   !/^[a-z0-9/_-]{1,80}$/.test(scope.endpoint)||!/^[A-Za-z0-9_-]{8,128}$/.test(scope.idempotencyKey))
+   idemFail('Invalid idempotency scope');
+  return this.cached(scope);
+ }
  private cached(scope:IdempotencyScope):AdmissionReceipt|undefined{
   const row=this.db.prepare('SELECT request_digest,receipt_payload FROM admission_idempotency WHERE principal_hash=? AND endpoint=? AND idempotency_key=?')
    .get(scope.principalHash,scope.endpoint,scope.idempotencyKey) as {request_digest:string;receipt_payload:string}|undefined;
