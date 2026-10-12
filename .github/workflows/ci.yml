@@ -1,0 +1,27 @@
+name: WORTH Core CI
+
+on:
+  push:
+    branches: [feat/uds-runtime-core-engine]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: TypeScript build
+        run: npm run build
+      - name: Unit tests
+        run: npm test
+      - name: Dependency security audit
+        run: npm audit --audit-level=moderate
