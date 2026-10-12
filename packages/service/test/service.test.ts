@@ -5,6 +5,7 @@ import {join} from 'node:path';
 import * as ed from '@noble/ed25519';
 import {SqliteGovernanceLedger,canonicalizeConsentRevocation,type WorthContribution,type ConsentAuthority} from '@synthsara/core';
 import {AdmissionServer} from '../src/server.js';
+import {DurableConsentAuthority} from '../src/consent.js';
 const hex=(b:Uint8Array)=>Buffer.from(b).toString('hex');
 const enc=new TextEncoder();
 const token='integration_test_token_123456789';
@@ -139,5 +140,24 @@ describe('service v0.1 adversarial durability',()=>{
   expect(receipts[0]).toEqual(receipts[1]);
   expect(responses.map(r=>r.headers.get('x-idempotent-replay')).sort()).toEqual(['false','true']);
   expect(ledger.isActionRecorded('parallel_a1')).toBe(true);
+ }));
+});
+
+describe('production consent authority',()=>{
+ it('accepts canonical signed evidence and fails closed after durable withdrawal or malformed proof',async()=>setup(async({base,ledger,f})=>{
+  await ledger.registerGrant(f.signed);
+  const consent=new DurableConsentAuthority(ledger);
+  const contribution=await f.contribution('consent_c1','consent_a1');
+  expect(await consent.isAuthorized(contribution,Date.now())).toBe(true);
+  const forged={...contribution,verifiedActions:[{...contribution.verifiedActions[0],recipientSignature:'0'.repeat(128)}]};
+  // Tombstone policy does not replace core Ed25519 signature verification.
+  const attempted=await fetch(base+'/v1/admit',{method:'POST',headers:{...headers,'idempotency-key':'forged_key_001'},body:JSON.stringify({contribution:forged})});
+  expect(attempted.status).not.toBe(201);
+  expect(ledger.isActionRecorded('consent_a1')).toBe(false);
+  const revocation={recipientPublicKey:f.recPub,actionId:'consent_a1',revokedAt:f.now,revocationNonce:'consent_revocation_001'};
+  await ledger.revokeConsent({...revocation,recipientSignature:hex(await ed.signAsync(canonicalizeConsentRevocation(revocation),f.recipient))});
+  expect(await consent.isAuthorized(contribution,Date.now())).toBe(false);
+  expect(await consent.isAuthorized({...contribution,verifiedActions:[]},Date.now())).toBe(false);
+  expect(ledger.isActionRecorded('consent_a1')).toBe(false);
  }));
 });
