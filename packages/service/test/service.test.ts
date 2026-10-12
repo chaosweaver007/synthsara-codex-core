@@ -8,6 +8,7 @@ import {AdmissionServer} from '../src/server.js';
 const hex=(b:Uint8Array)=>Buffer.from(b).toString('hex');
 const enc=new TextEncoder();
 const token='integration_test_token_123456789';
+const otherToken='alternate_token_123456789';
 const allow:ConsentAuthority={isAuthorized:async()=>true};
 async function fixture(){
  const root=ed.utils.randomPrivateKey(),attester=ed.utils.randomPrivateKey(),recipient=ed.utils.randomPrivateKey();
@@ -26,7 +27,7 @@ async function fixture(){
 async function setup(run:(ctx:{base:string;ledger:SqliteGovernanceLedger;f:Awaited<ReturnType<typeof fixture>>})=>Promise<void>,rateLimitPerMinute=60){
  const dir=mkdtempSync(join(tmpdir(),'uds-wire-'));const f=await fixture();
  const ledger=new SqliteGovernanceLedger({dbPath:join(dir,'ledger.sqlite'),rootAnchorPublicKey:f.rootPub,activeEpoch:1});
- const server=new AdmissionServer({ledger,consent:allow,authTokens:new Set([token]),rateLimitPerMinute});
+ const server=new AdmissionServer({ledger,consent:allow,authTokens:new Set([token,otherToken]),rateLimitPerMinute});
  try{
   await server.listen(0);
   const address=server.address();
@@ -73,8 +74,8 @@ describe('service v0.1 HTTP ingress',()=>{
   const before=await fetch(base+'/v1/verify/verify_a1',{headers});
   expect(before.status).toBe(200);
   expect(await before.json()).toEqual({actionId:'verify_a1',admitted:true,consentRevoked:false});
-  const other=await fetch(base+'/v1/verify/verify_a1',{headers:{authorization:'Bearer alternate_token_123456789'}});
-  expect(other.status).toBe(401);
+  const other=await fetch(base+'/v1/verify/verify_a1',{headers:{authorization:'Bearer '+otherToken}});
+  expect(other.status).toBe(404);
   const revocation={recipientPublicKey:f.recPub,actionId:'verify_a1',revokedAt:f.now,revocationNonce:'verify_withdrawal_001'};
   const recipientSignature=hex(await ed.signAsync(canonicalizeConsentRevocation(revocation),f.recipient));
   const withdrawn=await fetch(base+'/v1/revoke-consent',{method:'POST',headers,body:JSON.stringify({...revocation,recipientSignature})});
