@@ -81,7 +81,9 @@ export class AdmissionServer {
   if(req.method==='GET'&&pathname.startsWith('/v1/verify/')){
    const actionId=pathname.slice('/v1/verify/'.length);
    if(!/^[A-Za-z0-9_-]{1,256}$/.test(actionId)){error(res,400,'INVALID_ACTION_ID');return;}
-   json(res,200,{actionId,admitted:this.config.ledger.isActionRecorded(actionId)});
+   const status=this.config.ledger.verifyActionForPrincipal(principalHash,actionId);
+   if(!status){error(res,404,'NOT_FOUND');return;}
+   json(res,200,status);
    return;
   }
   if(req.method!=='POST'||!['/v1/admit','/v1/revoke-consent'].includes(pathname)){error(res,404,'NOT_FOUND');return;}
