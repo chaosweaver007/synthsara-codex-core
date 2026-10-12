@@ -17,6 +17,8 @@ export class UdsRuntimePipeline {
  async submitIdempotent(contribution:WorthContribution,scope:IdempotencyScope,evaluationTime=Date.now()):Promise<IdempotentAdmissionResult>{
   // Score is computed internally, never supplied by the HTTP caller.
   // Ledger resolves historical idempotent retries before new-admission replay checks.
+  const previous=this.ledger.lookupIdempotency(scope);
+  if(previous)return {receipt:previous,isReplay:true};
   const trusted=new Set(contribution.communityAttestations.map(a=>a.attesterPublicKey.toLowerCase()));
   const score=await calculateWorth(contribution,trusted,this.config);
   return this.ledger.acceptWithIdempotency(contribution,this.consent,evaluationTime,scope,score);
