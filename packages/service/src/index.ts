@@ -1,2 +1,2 @@
-/** Deliberately fail-closed: no listener is started by this bootstrap until ingress is implemented and tested. */
-export {createAdmissionServer} from './server.js';
+/** Service module: importing does not start a listener. */
+export {AdmissionServer,createAdmissionServer,sha256Hex,type ServiceConfig} from './server.js';
