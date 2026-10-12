@@ -48,6 +48,18 @@ export class SqliteGovernanceLedger {
     CREATE TABLE IF NOT EXISTS capability_grants(attester_public_key TEXT PRIMARY KEY,authorized_domains TEXT NOT NULL,valid_from INTEGER NOT NULL,valid_until INTEGER NOT NULL,nonce TEXT NOT NULL UNIQUE,authority_epoch INTEGER NOT NULL,authority_signature TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS used_grant_nonces(nonce TEXT PRIMARY KEY);
     CREATE TABLE IF NOT EXISTS revocations(target_public_key TEXT PRIMARY KEY,revoked_at INTEGER NOT NULL,reason TEXT NOT NULL,authority_epoch INTEGER NOT NULL,authority_signature TEXT NOT NULL);
+    -- Reserved for a future transaction-integrated admission API.
+    -- This table alone does not make admission idempotent.
+    CREATE TABLE IF NOT EXISTS admission_idempotency(
+     principal_hash TEXT NOT NULL,
+     endpoint TEXT NOT NULL,
+     idempotency_key TEXT NOT NULL,
+     request_digest TEXT NOT NULL,
+     contribution_id TEXT NOT NULL REFERENCES accepted_contributions(contribution_id),
+     receipt_payload TEXT NOT NULL,
+     committed_at INTEGER NOT NULL,
+     PRIMARY KEY(principal_hash,endpoint,idempotency_key)
+    );
     CREATE TABLE IF NOT EXISTS consent_revocations(
      recipient_public_key TEXT NOT NULL,
      action_id TEXT NOT NULL,
