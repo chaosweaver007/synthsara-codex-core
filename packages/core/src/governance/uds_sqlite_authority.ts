@@ -101,7 +101,8 @@ export class SqliteGovernanceLedger {
     const id=a.attesterPublicKey.toLowerCase();
     if(revoked.get(id))fail('Attester revoked at commit');
     const g=grant.get(id) as {authorized_domains:string;valid_from:number;valid_until:number;authority_epoch:number}|undefined;
-    if(!g||g.authority_epoch!==this.epoch||now<g.valid_from||now>g.valid_until)fail('Inactive or stale attester grant');
+    if(!g)fail('Missing attester grant');
+    if(g.authority_epoch!==this.epoch||now<g.valid_from||now>g.valid_until)fail('Inactive or stale attester grant');
     const authorized=JSON.parse(g.authorized_domains) as DomainScope[];
     if(!Array.isArray(authorized)||[...domains].some(d=>!authorized.includes(d)))fail('Out-of-scope attester');
    }
