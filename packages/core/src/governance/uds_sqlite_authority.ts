@@ -247,6 +247,14 @@ export class SqliteGovernanceLedger {
    return receipt?{receipt,isReplay:false}:undefined;
   }catch(e){if(this.db.isTransaction)this.db.exec('ROLLBACK');throw e;}
  }
+ /** Principal-scoped local status. Unknown or unowned action IDs are indistinguishable. */
+ verifyActionForPrincipal(principalHash:string,actionId:string):{actionId:string;admitted:boolean;consentRevoked:boolean}|undefined{
+  if(!/^[0-9a-f]{64}$/.test(principalHash)||!/^[A-Za-z0-9_-]{1,256}$/.test(actionId))return undefined;
+  const owned=this.db.prepare(`SELECT 1 FROM processed_actions a JOIN admission_idempotency i ON i.contribution_id=a.contribution_id WHERE a.action_id=? AND i.principal_hash=? AND i.endpoint='v1/admit' LIMIT 1`).get(actionId,principalHash);
+  if(!owned)return undefined;
+  const revoked=this.db.prepare('SELECT 1 FROM consent_revocations WHERE action_id=? LIMIT 1').get(actionId)!==undefined;
+  return {actionId,admitted:!revoked,consentRevoked:revoked};
+ }
  isKeyRevoked(key:string):boolean{return this.db.prepare('SELECT 1 FROM revocations WHERE target_public_key=?').get(key.toLowerCase())!==undefined;}
  isActionRecorded(id:string):boolean{return this.db.prepare('SELECT 1 FROM processed_actions WHERE action_id=?').get(id)!==undefined;}
  close():void{this.db.close();}
