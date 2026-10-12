@@ -1,4 +1,5 @@
 import {describe,it,expect} from 'vitest';
+import {DatabaseSync} from 'node:sqlite';
 import * as ed from '@noble/ed25519';
 import {mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
@@ -33,6 +34,21 @@ async function withDb(run:(path:string)=>Promise<void>){
  try{await run(join(dir,'ledger.sqlite'));}finally{rmSync(dir,{recursive:true,force:true});}
 }
 describe('Issue #6 stage 2 durable authority',()=>{
+ it('stages principal- and endpoint-scoped idempotency schema durably',async()=>withDb(async path=>{
+  const f=await fixture();
+  const ledger=new SqliteGovernanceLedger({dbPath:path,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
+  ledger.close();
+  const db=new DatabaseSync(path);
+  try{
+   const columns=db.prepare('PRAGMA table_info(admission_idempotency)').all() as Array<{name:string;pk:number}>;
+   expect(columns.filter(c=>c.pk>0).sort((a,b)=>a.pk-b.pk).map(c=>c.name))
+    .toEqual(['principal_hash','endpoint','idempotency_key']);
+   const foreignKeys=db.prepare('PRAGMA foreign_key_list(admission_idempotency)').all() as Array<{table:string;from:string}>;
+   expect(foreignKeys).toEqual(expect.arrayContaining([expect.objectContaining({table:'accepted_contributions',from:'contribution_id'})]));
+   expect(db.prepare('SELECT count(*) AS count FROM admission_idempotency').get()).toMatchObject({count:0});
+  }finally{db.close();}
+ }));
+
  it('persists grants and accepts canonical evidence after restart',async()=>withDb(async path=>{
   const f=await fixture(),a=new SqliteGovernanceLedger({dbPath:path,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
   await a.registerGrant(f.signed);a.close();
