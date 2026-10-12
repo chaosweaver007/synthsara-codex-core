@@ -63,7 +63,25 @@ describe('service v0.1 HTTP ingress',()=>{
   expect(ledger.isConsentRevoked(f.recPub,'withdrawn_1')).toBe(true);
   const verify=await fetch(base+'/v1/verify/withdrawn_1',{headers});
   expect(verify.status).toBe(200);
-  expect(await verify.json()).toEqual({actionId:'withdrawn_1',admitted:false});
+  expect(verify.status).toBe(404); // unowned action existence must not be disclosed
+ }));
+ it('scopes verification to the submitting principal and invalidates admitted actions on recipient withdrawal',async()=>setup(async({base,ledger,f})=>{
+  await ledger.registerGrant(f.signed);
+  const contribution=await f.contribution('verify_c1','verify_a1');
+  const admitted=await fetch(base+'/v1/admit',{method:'POST',headers:{...headers,'idempotency-key':'verify_key_001'},body:JSON.stringify({contribution})});
+  expect(admitted.status).toBe(201);
+  const before=await fetch(base+'/v1/verify/verify_a1',{headers});
+  expect(before.status).toBe(200);
+  expect(await before.json()).toEqual({actionId:'verify_a1',admitted:true,consentRevoked:false});
+  const other=await fetch(base+'/v1/verify/verify_a1',{headers:{authorization:'Bearer alternate_token_123456789'}});
+  expect(other.status).toBe(401);
+  const revocation={recipientPublicKey:f.recPub,actionId:'verify_a1',revokedAt:f.now,revocationNonce:'verify_withdrawal_001'};
+  const recipientSignature=hex(await ed.signAsync(canonicalizeConsentRevocation(revocation),f.recipient));
+  const withdrawn=await fetch(base+'/v1/revoke-consent',{method:'POST',headers,body:JSON.stringify({...revocation,recipientSignature})});
+  expect(withdrawn.status).toBe(200);
+  const after=await fetch(base+'/v1/verify/verify_a1',{headers});
+  expect(after.status).toBe(200);
+  expect(await after.json()).toEqual({actionId:'verify_a1',admitted:false,consentRevoked:true});
  }));
  it('enforces rate limits and malformed body boundaries',async()=>setup(async({base})=>{
   const one=await fetch(base+'/v1/admit',{method:'POST',headers:{...headers,'idempotency-key':'wire_key_456'},body:'{'});
