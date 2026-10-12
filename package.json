@@ -6,6 +6,6 @@
   ],
   "scripts": {
     "build": "npm run build -w @synthsara/core && npm run build -w @synthsara/service",
-    "test": "npm run test -w @synthsara/core"
+    "test": "npm run test -w @synthsara/core && npm run test -w @synthsara/service"
   }
 }
