@@ -49,7 +49,8 @@ export class SqliteGovernanceLedger {
  }
  async registerGrant(s:SignedCapabilityGrant):Promise<void>{
   const g=s?.grant;
-  if(!g||!keyRe.test(g.attesterPublicKey)||!sigRe.test(s.authoritySignature)||
+  if(!g)fail('Malformed grant');
+  if(!keyRe.test(g.attesterPublicKey)||!sigRe.test(s.authoritySignature)||
    !Number.isSafeInteger(g.validFrom)||!Number.isSafeInteger(g.validUntil)||
    g.validFrom<=0||g.validFrom>=g.validUntil||!/^[a-zA-Z0-9_-]{8,128}$/.test(g.nonce)||
    !Array.isArray(g.authorizedDomains)||!g.authorizedDomains.length||
