@@ -34,6 +34,36 @@ async function withLedger(fn:(ledger:SqliteGovernanceLedger,f:Awaited<ReturnType
  try{await fn(ledger,f);}finally{ledger.close();rmSync(dir,{recursive:true,force:true});}
 }
 describe('UDS runtime admission wiring',()=>{
+ it('co-commits a receipt and returns the same result on an exact retry',async()=>withLedger(async(ledger,f)=>{
+  await ledger.registerGrant(f.signed);
+  const c=await f.contribution('idem1','idem_action1');
+  const scope={principalHash:'a'.repeat(64),endpoint:'v1/admit',idempotencyKey:'idempotency_123',requestDigest:'b'.repeat(64)};
+  const pipeline=new UdsRuntimePipeline(ledger,allow);
+  const first=await pipeline.submitIdempotent(c,scope,f.now);
+  const second=await pipeline.submitIdempotent(c,scope,f.now);
+  expect(first.isReplay).toBe(false);
+  expect(second).toEqual({receipt:first.receipt,isReplay:true});
+  expect(ledger.isActionRecorded('idem_action1')).toBe(true);
+ }));
+ it('rejects a reused key with changed digest without a second admission',async()=>withLedger(async(ledger,f)=>{
+  await ledger.registerGrant(f.signed);
+  const c=await f.contribution('idem2','idem_action2');
+  const scope={principalHash:'a'.repeat(64),endpoint:'v1/admit',idempotencyKey:'idempotency_234',requestDigest:'b'.repeat(64)};
+  const pipeline=new UdsRuntimePipeline(ledger,allow);
+  await pipeline.submitIdempotent(c,scope,f.now);
+  await expect(pipeline.submitIdempotent(c,{...scope,requestDigest:'c'.repeat(64)},f.now))
+   .rejects.toThrow(/UDS_IDEMPOTENCY_CONFLICT/);
+ }));
+ it('does not turn a different principal or endpoint into a cached replay',async()=>withLedger(async(ledger,f)=>{
+  await ledger.registerGrant(f.signed);
+  const c=await f.contribution('idem3','idem_action3');
+  const scope={principalHash:'a'.repeat(64),endpoint:'v1/admit',idempotencyKey:'idempotency_345',requestDigest:'b'.repeat(64)};
+  const pipeline=new UdsRuntimePipeline(ledger,allow);
+  await pipeline.submitIdempotent(c,scope,f.now);
+  await expect(pipeline.submitIdempotent(c,{...scope,principalHash:'c'.repeat(64)},f.now)).rejects.toThrow();
+  await expect(pipeline.submitIdempotent(c,{...scope,endpoint:'v1/other'},f.now)).rejects.toThrow();
+ }));
+
  it('emits bounded score only after durable admission',async()=>withLedger(async(ledger,f)=>{
   await ledger.registerGrant(f.signed);
   const receipt=await new UdsRuntimePipeline(ledger,allow).submit(await f.contribution('c1','a1'),f.now);

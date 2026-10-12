@@ -1,4 +1,5 @@
 import {describe,it,expect} from 'vitest';
+import {DatabaseSync} from 'node:sqlite';
 import * as ed from '@noble/ed25519';
 import {mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
@@ -33,6 +34,64 @@ async function withDb(run:(path:string)=>Promise<void>){
  try{await run(join(dir,'ledger.sqlite'));}finally{rmSync(dir,{recursive:true,force:true});}
 }
 describe('Issue #6 stage 2 durable authority',()=>{
+ it('idempotent admission receipt survives closing and reopening the SQLite database',async()=>withDb(async path=>{
+  const f=await fixture();
+  const scope={principalHash:'a'.repeat(64),endpoint:'v1/admit',idempotencyKey:'restart_receipt_001',requestDigest:'b'.repeat(64)};
+  const contribution=await f.contribution('restart_c1','restart_a1');
+  const a=new SqliteGovernanceLedger({dbPath:path,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
+  let first;
+  try{
+   await a.registerGrant(f.signed);
+   first=await a.acceptWithIdempotency(contribution,allow,f.now,scope,42);
+   expect(first.isReplay).toBe(false);
+  }finally{a.close();}
+  const b=new SqliteGovernanceLedger({dbPath:path,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
+  try{
+   const replay=await b.acceptWithIdempotency(contribution,allow,f.now,scope,42);
+   expect(replay).toEqual({receipt:first.receipt,isReplay:true});
+   expect(b.isActionRecorded('restart_a1')).toBe(true);
+   const db=new DatabaseSync(path);
+   try{expect(db.prepare('SELECT COUNT(*) AS n FROM admission_idempotency').get()).toMatchObject({n:1});}
+   finally{db.close();}
+  }finally{b.close();}
+ }));
+ it('concurrent same-key admissions on separate ledger connections yield one durable receipt',async()=>withDb(async path=>{
+  const f=await fixture();
+  const a=new SqliteGovernanceLedger({dbPath:path,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
+  const b=new SqliteGovernanceLedger({dbPath:path,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
+  try{
+   await a.registerGrant(f.signed);
+   const contribution=await f.contribution('race_c1','race_a1');
+   const scope={principalHash:'a'.repeat(64),endpoint:'v1/admit',idempotencyKey:'race_receipt_001',requestDigest:'b'.repeat(64)};
+   const [one,two]=await Promise.all([
+    a.acceptWithIdempotency(contribution,allow,f.now,scope,42),
+    b.acceptWithIdempotency(contribution,allow,f.now,scope,42)
+   ]);
+   expect([one.isReplay,two.isReplay].sort()).toEqual([false,true]);
+   expect(one.receipt).toEqual(two.receipt);
+   const db=new DatabaseSync(path);
+   try{
+    expect(db.prepare('SELECT COUNT(*) AS n FROM admission_idempotency').get()).toMatchObject({n:1});
+    expect(db.prepare('SELECT COUNT(*) AS n FROM accepted_contributions').get()).toMatchObject({n:1});
+   }finally{db.close();}
+  }finally{a.close();b.close();}
+ }));
+
+ it('stages principal- and endpoint-scoped idempotency schema durably',async()=>withDb(async path=>{
+  const f=await fixture();
+  const ledger=new SqliteGovernanceLedger({dbPath:path,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
+  ledger.close();
+  const db=new DatabaseSync(path);
+  try{
+   const columns=db.prepare('PRAGMA table_info(admission_idempotency)').all() as Array<{name:string;pk:number}>;
+   expect(columns.filter(c=>c.pk>0).sort((a,b)=>a.pk-b.pk).map(c=>c.name))
+    .toEqual(['principal_hash','endpoint','idempotency_key']);
+   const foreignKeys=db.prepare('PRAGMA foreign_key_list(admission_idempotency)').all() as Array<{table:string;from:string}>;
+   expect(foreignKeys).toEqual(expect.arrayContaining([expect.objectContaining({table:'accepted_contributions',from:'contribution_id'})]));
+   expect(db.prepare('SELECT count(*) AS count FROM admission_idempotency').get()).toMatchObject({count:0});
+  }finally{db.close();}
+ }));
+
  it('persists grants and accepts canonical evidence after restart',async()=>withDb(async path=>{
   const f=await fixture(),a=new SqliteGovernanceLedger({dbPath:path,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
   await a.registerGrant(f.signed);a.close();
