@@ -3,7 +3,7 @@ import * as ed from '@noble/ed25519';
 import {mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {SqliteGovernanceLedger} from './uds_sqlite_authority.js';
+import {SqliteGovernanceLedger,canonicalizeConsentRevocation} from './uds_sqlite_authority.js';
 import {grantMessage,revocationMessage,type CapabilityGrant,type ConsentAuthority} from './uds_registry_replay.js';
 import type {WorthContribution} from './uds_worth_engine.js';
 const hex=(b:Uint8Array)=>Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join('');
@@ -22,7 +22,11 @@ async function fixture(){
  };
  const revocation=async()=>{const entry={targetPublicKey:attPub,revokedAt:now,reason:'COMPROMISED'};
   return {...entry,authoritySignature:hex(await ed.signAsync(revocationMessage(entry),root))};};
- return {rootPub,attPub,now,signed,contribution,revocation};
+ const consentRevocation=async(actionId:string,nonce:string,privateKey=recipient)=>{
+  const entry={recipientPublicKey:recPub,actionId,revokedAt:now,revocationNonce:nonce};
+  return {...entry,recipientSignature:hex(await ed.signAsync(canonicalizeConsentRevocation(entry),privateKey))};
+ };
+ return {rootPub,attPub,recPub,now,signed,contribution,revocation,consentRevocation};
 }
 async function withDb(run:(path:string)=>Promise<void>){
  const dir=mkdtempSync(join(tmpdir(),'uds-authority-'));
@@ -76,6 +80,50 @@ describe('Issue #6 stage 2 durable authority',()=>{
    await expect(a.accept(c,consent,f.now)).rejects.toThrow(/revoked at commit/);
    expect(callbackInvoked).toBe(true);
    expect(a.isActionRecorded('action_midflight')).toBe(false);
+  }finally{a.close();b.close();}
+ }));
+ it('recipient-signed withdrawal survives restart and blocks valid admission',async()=>withDb(async path=>{
+  const f=await fixture();
+  const a=new SqliteGovernanceLedger({dbPath:path,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
+  await a.registerGrant(f.signed);
+  const withdrawal=await f.consentRevocation('a1','nonce_consent_123');
+  await a.revokeConsent(withdrawal);
+  expect(a.isConsentRevoked(f.recPub,'a1')).toBe(true);
+  await expect(a.revokeConsent(withdrawal)).rejects.toThrow(/CONSENT/);
+  a.close();
+  const b=new SqliteGovernanceLedger({dbPath:path,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
+  try{
+   expect(b.isConsentRevoked(f.recPub,'a1')).toBe(true);
+   await expect(b.accept(await f.contribution('c1','a1'),allow,f.now)).rejects.toThrow(/CONSENT/);
+   expect(b.isActionRecorded('a1')).toBe(false);
+   await b.accept(await f.contribution('c2','a2'),allow,f.now);
+   expect(b.isActionRecorded('a2')).toBe(true);
+  }finally{b.close();}
+ }));
+ it('rejects forged consent withdrawals and replayed nonce',async()=>withDb(async path=>{
+  const f=await fixture(),a=new SqliteGovernanceLedger({dbPath:path,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
+  try{
+   const valid=await f.consentRevocation('a1','nonce_consent_234');
+   await expect(a.revokeConsent({...valid,actionId:'a2'})).rejects.toThrow(/CONSENT/);
+   expect(a.isConsentRevoked(f.recPub,'a2')).toBe(false);
+   await a.revokeConsent(valid);
+   await expect(a.revokeConsent(await f.consentRevocation('a2','nonce_consent_234'))).rejects.toThrow(/CONSENT/);
+   expect(a.isConsentRevoked(f.recPub,'a2')).toBe(false);
+  }finally{a.close();}
+ }));
+ it('withdrawal committed during async consent checkpoint aborts admission',async()=>withDb(async path=>{
+  const f=await fixture();
+  const a=new SqliteGovernanceLedger({dbPath:path,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
+  const b=new SqliteGovernanceLedger({dbPath:path,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
+  try{
+   await a.registerGrant(f.signed);
+   const c=await f.contribution('c1','a1');
+   const consent:ConsentAuthority={isAuthorized:async()=>{
+    await b.revokeConsent(await f.consentRevocation('a1','nonce_consent_345'));
+    return true;
+   }};
+   await expect(a.accept(c,consent,f.now)).rejects.toThrow(/CONSENT/);
+   expect(a.isActionRecorded('a1')).toBe(false);
   }finally{a.close();b.close();}
  }));
  it('rejects wrong root/epoch and absent consent',async()=>withDb(async path=>{

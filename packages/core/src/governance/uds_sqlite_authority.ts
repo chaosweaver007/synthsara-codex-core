@@ -1,5 +1,5 @@
 /** Issue #6 Stage 2: durable root-signed attester authority and atomic replay admission.
- * Local SQLite consistency only; not cross-node consensus or durable recipient consent.
+ * Local SQLite consistency only; not cross-node consensus.
  */
 import {DatabaseSync} from 'node:sqlite';
 import * as ed from '@noble/ed25519';
@@ -9,6 +9,20 @@ import {grantMessage,revocationMessage,type SignedCapabilityGrant,type Revocatio
 const keyRe=/^[0-9a-fA-F]{64}$/,sigRe=/^[0-9a-fA-F]{128}$/;
 const scopes=new Set<DomainScope>(['CARE_WORK','COMMUNITY_HEALING','SHADOW_INTEGRATION','ECOSYSTEM_BUILD']);
 const fail=(reason:string):never=>{throw new Error('[UDS_AUTHORITY_ERROR]: '+reason);};
+export interface ConsentRevocationEntry {
+ readonly recipientPublicKey:string;
+ readonly actionId:string;
+ readonly revokedAt:number;
+ readonly revocationNonce:string;
+ readonly recipientSignature:string;
+}
+export function canonicalizeConsentRevocation(entry:Omit<ConsentRevocationEntry,'recipientSignature'>):Uint8Array {
+ return new TextEncoder().encode(JSON.stringify([
+  'SYNTHSARA:UDS:CONSENT_REVOCATION:v1',
+  entry.recipientPublicKey.toLowerCase(),entry.actionId,entry.revokedAt,entry.revocationNonce
+ ]));
+}
+const consentFail=(reason:string):never=>{throw new Error('[UDS_CONSENT_ERROR]: '+reason);};
 export interface SqliteGovernanceConfig {readonly dbPath:string;readonly rootAnchorPublicKey:string;readonly activeEpoch:number;readonly maxDriftMs?:number;}
 export class SqliteGovernanceLedger {
  private readonly db:DatabaseSync;
@@ -34,6 +48,18 @@ export class SqliteGovernanceLedger {
     CREATE TABLE IF NOT EXISTS capability_grants(attester_public_key TEXT PRIMARY KEY,authorized_domains TEXT NOT NULL,valid_from INTEGER NOT NULL,valid_until INTEGER NOT NULL,nonce TEXT NOT NULL UNIQUE,authority_epoch INTEGER NOT NULL,authority_signature TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS used_grant_nonces(nonce TEXT PRIMARY KEY);
     CREATE TABLE IF NOT EXISTS revocations(target_public_key TEXT PRIMARY KEY,revoked_at INTEGER NOT NULL,reason TEXT NOT NULL,authority_epoch INTEGER NOT NULL,authority_signature TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS consent_revocations(
+     recipient_public_key TEXT NOT NULL,
+     action_id TEXT NOT NULL,
+     revoked_at INTEGER NOT NULL,
+     revocation_nonce TEXT NOT NULL UNIQUE,
+     recipient_signature TEXT NOT NULL,
+     PRIMARY KEY(recipient_public_key,action_id)
+    );
+    CREATE TRIGGER IF NOT EXISTS prevent_consent_revocation_update
+     BEFORE UPDATE ON consent_revocations BEGIN SELECT RAISE(ABORT,'consent revocation is immutable'); END;
+    CREATE TRIGGER IF NOT EXISTS prevent_consent_revocation_delete
+     BEFORE DELETE ON consent_revocations BEGIN SELECT RAISE(ABORT,'consent revocation is immutable'); END;
     CREATE TRIGGER IF NOT EXISTS prevent_revoked_grant BEFORE INSERT ON capability_grants
      WHEN EXISTS(SELECT 1 FROM revocations WHERE target_public_key=NEW.attester_public_key)
      BEGIN SELECT RAISE(ABORT,'revoked attester'); END;
@@ -80,6 +106,31 @@ export class SqliteGovernanceLedger {
    this.db.exec('COMMIT');
   }catch(e){this.db.exec('ROLLBACK');fail('Duplicate or invalid revocation');}
  }
+ async revokeConsent(entry:ConsentRevocationEntry):Promise<void>{
+  if(!entry||!keyRe.test(entry.recipientPublicKey)||!sigRe.test(entry.recipientSignature)||
+     typeof entry.actionId!=='string'||entry.actionId.length===0||entry.actionId.length>256||
+     entry.actionId.trim()!==entry.actionId||
+     !Number.isSafeInteger(entry.revokedAt)||entry.revokedAt<=0||
+     typeof entry.revocationNonce!=='string'||!/^[a-zA-Z0-9_-]{8,128}$/.test(entry.revocationNonce))
+   consentFail('Malformed consent revocation');
+  const key=entry.recipientPublicKey.toLowerCase();
+  const payload=canonicalizeConsentRevocation({
+   recipientPublicKey:key,actionId:entry.actionId,revokedAt:entry.revokedAt,revocationNonce:entry.revocationNonce
+  });
+  if(!await ed.verifyAsync(entry.recipientSignature,payload,key))
+   consentFail('Invalid recipient revocation signature');
+  this.db.exec('BEGIN IMMEDIATE');
+  try{
+   this.db.prepare('INSERT INTO consent_revocations VALUES(?,?,?,?,?)').run(
+    key,entry.actionId,entry.revokedAt,entry.revocationNonce,entry.recipientSignature.toLowerCase());
+   this.db.exec('COMMIT');
+  }catch(e){this.db.exec('ROLLBACK');consentFail('Duplicate withdrawal or reused nonce');}
+ }
+ isConsentRevoked(recipientPublicKey:string,actionId:string):boolean{
+  if(!keyRe.test(recipientPublicKey))consentFail('Malformed recipient key');
+  return this.db.prepare('SELECT 1 FROM consent_revocations WHERE recipient_public_key=? AND action_id=?')
+   .get(recipientPublicKey.toLowerCase(),actionId)!==undefined;
+ }
  async accept(c:WorthContribution,consent:ConsentAuthority,evaluationTime=Date.now()):Promise<void>{
   validateWorthSchema(c);
   if(!Number.isSafeInteger(evaluationTime)||evaluationTime<=0||!c.verifiedActions.length||!c.communityAttestations.length)
@@ -96,6 +147,11 @@ export class SqliteGovernanceLedger {
    const grant=this.db.prepare('SELECT authorized_domains,valid_from,valid_until,authority_epoch FROM capability_grants WHERE attester_public_key=?');
    const revoked=this.db.prepare('SELECT 1 FROM revocations WHERE target_public_key=?');
    const domains=new Set(c.verifiedActions.map(a=>a.domain));
+   const withdrawn=this.db.prepare('SELECT 1 FROM consent_revocations WHERE recipient_public_key=? AND action_id=?');
+   for(const a of c.verifiedActions){
+    if(withdrawn.get(a.recipientPublicKey.toLowerCase(),a.actionId))
+     consentFail('Recipient consent withdrawn for action '+a.actionId);
+   }
    for(const a of c.verifiedActions)if(Math.abs(now-a.timestamp)>this.drift)fail('Timestamp drift at commit');
    for(const a of c.communityAttestations){
     const id=a.attesterPublicKey.toLowerCase();
