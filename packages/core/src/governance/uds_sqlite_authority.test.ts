@@ -59,6 +59,25 @@ describe('Issue #6 stage 2 durable authority',()=>{
    expect(a.isActionRecorded('a1')).toBe(false);
   }finally{a.close();b.close();}
  }));
+ it('deterministic mid-flight revocation during async consent gate rejects before transaction',async()=>withDb(async path=>{
+  const f=await fixture();
+  const a=new SqliteGovernanceLedger({dbPath:path,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
+  const b=new SqliteGovernanceLedger({dbPath:path,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
+  try{
+   await a.registerGrant(f.signed);
+   const c=await f.contribution('midflight','action_midflight');
+   let callbackInvoked=false;
+   const consent:ConsentAuthority={isAuthorized:async()=>{
+    callbackInvoked=true;
+    // Called after canonical signature verification, before A obtains its SQLite write lock.
+    await b.revokeKey(await f.revocation());
+    return true;
+   }};
+   await expect(a.accept(c,consent,f.now)).rejects.toThrow(/revoked at commit/);
+   expect(callbackInvoked).toBe(true);
+   expect(a.isActionRecorded('action_midflight')).toBe(false);
+  }finally{a.close();b.close();}
+ }));
  it('rejects wrong root/epoch and absent consent',async()=>withDb(async path=>{
   const f=await fixture(),a=new SqliteGovernanceLedger({dbPath:path,rootAnchorPublicKey:f.rootPub,activeEpoch:1});
   try{
